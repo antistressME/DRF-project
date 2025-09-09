@@ -10,6 +10,9 @@ class Course(models.Model):
     )
     description = models.TextField(verbose_name="Описание")
 
+    def __str__(self):
+        return self.name  # стороковое отображение, например, в консоль
+
     class Meta:
         verbose_name = "курс"
         verbose_name_plural = "курсы"
@@ -34,6 +37,9 @@ class Lesson(models.Model):
         null=True,
         related_name="lesson",
     )
+
+    def __str__(self):
+        return f"{self.name}. Курс: {self.course.name}"  # стороковое отображение, например, в консоль
 
     class Meta:
         verbose_name = "урок"
