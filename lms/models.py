@@ -27,7 +27,12 @@ class Lesson(models.Model):
         max_length=150, verbose_name="Ссылка на видео", blank=True, null=True
     )
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, verbose_name="Курс", blank=True, null=True
+        Course,
+        on_delete=models.CASCADE,
+        verbose_name="Курс",
+        blank=True,
+        null=True,
+        related_name="lesson",
     )
 
     class Meta:
