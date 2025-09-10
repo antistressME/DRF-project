@@ -19,7 +19,7 @@ class CourseSerializer(ModelSerializer):
 
     def get_lessons_in_course(self, obj):
         # Возвращает количество уроков в курсе.
-        lessons_count = Lesson.objects.filter(course=obj.pk).count()
+        lessons_count = Lesson.objects.filter(course=obj).count()
         return lessons_count
 
     class Meta:
