@@ -10,6 +10,9 @@ class Course(models.Model):
     )
     description = models.TextField(verbose_name="Описание")
 
+    def __str__(self):
+        return self.name  # стороковое отображение, например, в консоль
+
     class Meta:
         verbose_name = "курс"
         verbose_name_plural = "курсы"
@@ -27,8 +30,16 @@ class Lesson(models.Model):
         max_length=150, verbose_name="Ссылка на видео", blank=True, null=True
     )
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, verbose_name="Курс", blank=True, null=True
+        Course,
+        on_delete=models.CASCADE,
+        verbose_name="Курс",
+        blank=True,
+        null=True,
+        related_name="lesson",
     )
+
+    def __str__(self):
+        return f"{self.name}. Курс: {self.course.name}"  # стороковое отображение, например, в консоль
 
     class Meta:
         verbose_name = "урок"
