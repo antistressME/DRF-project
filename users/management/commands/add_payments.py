@@ -2,8 +2,8 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
 from lms.models import Course, Lesson
-from users.models import User
 from payments.models import Payment
+from users.models import User
 
 
 class Command(BaseCommand):
