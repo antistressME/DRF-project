@@ -1,5 +1,7 @@
 from django.db import models
 
+from users.models import User
+
 
 class Course(models.Model):
     """Класс модели курса."""
@@ -9,6 +11,14 @@ class Course(models.Model):
         upload_to="lms/course/images/", verbose_name="Превью", blank=True, null=True
     )
     description = models.TextField(verbose_name="Описание")
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        verbose_name="Владелец курса",
+        related_name="course",
+    )
 
     def __str__(self):
         return self.name  # стороковое отображение, например, в консоль
@@ -35,6 +45,14 @@ class Lesson(models.Model):
         verbose_name="Курс",
         blank=True,
         null=True,
+        related_name="lesson",
+    )
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        verbose_name="Владелец урока",
         related_name="lesson",
     )
 

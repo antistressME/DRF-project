@@ -5,4 +5,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("materials/", include("lms.urls", namespace="lms")),
     path("user/", include("users.urls", namespace="users")),
+    path("payments/", include("payments.urls", namespace="payments")),
 ]

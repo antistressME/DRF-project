@@ -1,22 +1,10 @@
-from rest_framework import filters
 from rest_framework.generics import (CreateAPIView, DestroyAPIView,
                                      RetrieveAPIView, UpdateAPIView)
 from rest_framework.permissions import AllowAny
-from rest_framework.viewsets import ModelViewSet
 
-from users.models import Payment, User
-from users.serializer import (PaymentSerializer, UserRetrieveSerializer,
-                              UserSerializer, UserUpdateSerializer)
-
-
-class PaymentViewSet(ModelViewSet):
-    """Класс представления модели Пдлатежей (Payment)."""
-
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-    filterset_fields = ("paid_course", "paid_lesson", "payment_method")
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ("payment_date",)
+from users.models import User
+from users.serializer import (UserRetrieveSerializer, UserSerializer,
+                              UserUpdateSerializer)
 
 
 class UserCreateAPIView(CreateAPIView):
