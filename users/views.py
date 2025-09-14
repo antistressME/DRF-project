@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from users.models import User
 from users.serializer import (UserRetrieveSerializer, UserSerializer,
                               UserUpdateSerializer)
-
+from users.permissions import IsUser
 
 class UserCreateAPIView(CreateAPIView):
     """Класс представления для создания пользователя."""
@@ -32,6 +32,7 @@ class UserUpdateAPIView(UpdateAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserUpdateSerializer
+    permission_classes = (IsUser,)
 
 
 class UserDestroyAPIView(DestroyAPIView):

@@ -1,7 +1,7 @@
 from rest_framework.generics import (CreateAPIView, DestroyAPIView,
                                      ListAPIView, RetrieveAPIView,
                                      UpdateAPIView)
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 
 from lms.models import Course, Lesson
@@ -26,7 +26,7 @@ class CourseViewSet(ModelViewSet):
         elif self.action in ("retrieve", "update"):
             self.permission_classes = (IsModer | IsOwner,)
         elif self.action == "destroy":
-            self.permission_classes = (IsModer | IsOwner,)
+            self.permission_classes = (IsAdminUser | IsOwner,)
         return [permission() for permission in self.permission_classes]
 
 
@@ -71,4 +71,4 @@ class LessonDestroyAPIView(DestroyAPIView):
 
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-    permission_classes = (~IsModer | IsOwner,)
+    permission_classes = (IsAdminUser | IsOwner,)
