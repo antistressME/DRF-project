@@ -1,5 +1,5 @@
-from rest_framework.test import force_authenticate, APITestCase, APIClient
 import pytest
+from rest_framework.test import APIClient, APITestCase, force_authenticate
 
 from users.models import User
 

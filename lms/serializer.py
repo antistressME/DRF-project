@@ -1,4 +1,5 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, CharField
+from rest_framework.serializers import (CharField, ModelSerializer,
+                                        SerializerMethodField)
 
 from lms.models import Course, Lesson
 from lms.validators import video_link_validator
@@ -6,6 +7,7 @@ from lms.validators import video_link_validator
 
 class LessonSerializer(ModelSerializer):
     """Сериализатор для класса Урок (Lesson)."""
+
     video_link = CharField(validators=[video_link_validator])
 
     class Meta:
