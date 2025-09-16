@@ -1,5 +1,6 @@
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.serializers import ValidationError
 from rest_framework.test import APITestCase, force_authenticate
 
 from lms.models import Course, Lesson
@@ -61,7 +62,11 @@ class LessonTestCase(APITestCase):
         self.user = User.objects.create(email="test@mail.com", password="test")
         self.course = Course.objects.create(name="Test course", description="test")
         self.lesson = Lesson.objects.create(
-            name="Test lesson", description="test", course=self.course, owner=self.user
+            name="Test lesson",
+            description="test",
+            course=self.course,
+            owner=self.user,
+            video_link="youtube.com",
         )
         self.client.force_authenticate(user=self.user)
 
@@ -79,6 +84,18 @@ class LessonTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Lesson.objects.all().count(), 2)
         self.assertEqual(response.json().get("owner"), self.user.pk)
+
+    def test_lesson_create_error(self):
+        """Тест создания урока с неверной ссылкой на видео."""
+        url = reverse("lms:lesson_create")
+        data = {
+            "name": "new lesson",
+            "description": "test",
+            "course": self.course.pk,
+            "video_link": "my.blog.link.com",
+        }
+        self.client.post(url, data)
+        self.assertRaises(ValidationError)
 
     def test_lesson_detail(self):
         """Тест просмотр данных урока."""
@@ -110,3 +127,28 @@ class LessonTestCase(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Lesson.objects.all().count(), 0)
+
+    def test_lesson_list(self):
+        """Тест получения списка уроков."""
+
+        result = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": self.lesson.pk,
+                    "video_link": "youtube.com",
+                    "name": "Test lesson",
+                    "image": None,
+                    "description": "test",
+                    "course": self.course.pk,
+                    "owner": self.user.pk,
+                }
+            ],
+        }
+        url = reverse("lms:lessons_list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Lesson.objects.all().count(), 1)
+        self.assertEqual(response.json(), result)

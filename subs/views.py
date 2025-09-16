@@ -18,7 +18,7 @@ class SubscriptionViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user = self.request.user
-        course_id = self.request.data
+        course_id = self.request.data["course"]
         course_item = get_object_or_404(Course, pk=course_id)
         subs_item = Subscription.objects.filter(user=user, course=course_id)
 
