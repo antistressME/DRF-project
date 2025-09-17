@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "users",
     "payments",
     "subs",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
