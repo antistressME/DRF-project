@@ -1,30 +1,248 @@
-from rest_framework.test import force_authenticate, APITestCase, APIClient
-import pytest
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.serializers import ValidationError
+from rest_framework.test import APITestCase, force_authenticate
 
+from lms.models import Course, Lesson
 from users.models import User
 
 
-@pytest.fixture
-def api_client(db):
-    user = User.objects.create(email="test", password="test")
-    client = APIClient()
-    client.force_authenticate(user=user)
-    return client
-
-
-class TestAuthenticateCreate(APITestCase):
+class CourseTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create(email="test", password="test")
-        self.client.force_authenticate(self.user)
+        self.user = User.objects.create(email="test@mail.com", password="test")
+        self.course = Course.objects.create(
+            name="Test course", description="test", owner=self.user
+        )
+        self.client.force_authenticate(user=self.user)
 
-    def test_create_course(self):
-        data = {"name": "test", "description": "test"}
-        response = self.client.post("/materials/", data)
-        assert response.status_code == 201
-        assert response.json() == data
+    def test_course_create(self):
+        """Тест создания курса."""
 
-    def test_create_lesson(self):
-        data = {"name": "test", "description": "test", "course": 1}
-        response = self.client.post("/materials/lesson/create/", data)
-        assert response.status_code == 201
-        assert response.json() == data
+        url = "/materials/"
+        data = {"name": "new course", "description": "test"}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Course.objects.all().count(), 2)
+        self.assertEqual(response.json().get("owner"), self.user.pk)
+
+    def test_course_detail(self):
+        """Тест просмотр данных курса."""
+
+        url = f"/materials/{self.course.pk}/"
+        response = self.client.get(url)
+        data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data.get("name"), "Test course")
+        self.assertEqual(data.get("owner"), self.user.pk)
+
+    def test_course_update(self):
+        """Тест обновления курса."""
+
+        url = f"/materials/{self.course.pk}/"
+        new_data = {
+            "name": "new name",
+            "description": "new description",
+        }
+        response = self.client.patch(url, new_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get("name"), "new name")
+        self.assertEqual(response.json().get("description"), "new description")
+
+    def test_course_delete(self):
+        """Тест удаления курса."""
+
+        url = f"/materials/{self.course.pk}/"
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Lesson.objects.all().count(), 0)
+
+
+class LessonTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create(email="test@mail.com", password="test")
+        self.course = Course.objects.create(name="Test course", description="test")
+        self.lesson = Lesson.objects.create(
+            name="Test lesson",
+            description="test",
+            course=self.course,
+            owner=self.user,
+            video_link="youtube.com",
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_lesson_create(self):
+        """Тест создания урока."""
+
+        url = reverse("lms:lesson_create")
+        data = {
+            "name": "new lesson",
+            "description": "test",
+            "course": self.course.pk,
+            "video_link": "youtube.com",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Lesson.objects.all().count(), 2)
+        self.assertEqual(response.json().get("owner"), self.user.pk)
+
+    def test_lesson_create_error(self):
+        """Тест создания урока с неверной ссылкой на видео."""
+        url = reverse("lms:lesson_create")
+        data = {
+            "name": "new lesson",
+            "description": "test",
+            "course": self.course.pk,
+            "video_link": "my.blog.link.com",
+        }
+        self.client.post(url, data)
+        self.assertRaises(ValidationError)
+
+    def test_lesson_detail(self):
+        """Тест просмотр данных урока."""
+
+        url = reverse("lms:lesson_retrieve", args=(self.lesson.pk,))
+        response = self.client.get(url)
+        data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data.get("name"), "Test lesson")
+        self.assertEqual(data.get("owner"), self.user.pk)
+
+    def test_lesson_update(self):
+        """Тест обновления урока."""
+
+        url = reverse("lms:lesson_update", args=(self.lesson.pk,))
+        new_data = {
+            "name": "new name",
+            "description": "new description",
+        }
+        response = self.client.patch(url, new_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get("name"), "new name")
+        self.assertEqual(response.json().get("description"), "new description")
+
+    def test_lesson_delete(self):
+        """Тест удаления урока."""
+
+        url = reverse("lms:lesson_delete", args=(self.lesson.pk,))
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Lesson.objects.all().count(), 0)
+
+    def test_lesson_list(self):
+        """Тест получения списка уроков."""
+
+        result = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": self.lesson.pk,
+                    "video_link": "youtube.com",
+                    "name": "Test lesson",
+                    "image": None,
+                    "description": "test",
+                    "course": self.course.pk,
+                    "owner": self.user.pk,
+                }
+            ],
+        }
+        url = reverse("lms:lessons_list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Lesson.objects.all().count(), 1)
+        self.assertEqual(response.json(), result)
+
+
+class LessonAnonUserTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create(email="test@mail.com", password="test")
+        self.course = Course.objects.create(name="Test course", description="test")
+        self.lesson = Lesson.objects.create(
+            name="Test lesson",
+            description="test",
+            course=self.course,
+            owner=self.user,
+            video_link="youtube.com",
+        )
+
+    def test_lesson_detail_anon(self):
+        """Тест просмотра данных урока неавторизованным пользователем."""
+
+        url = reverse("lms:lesson_retrieve", args=(self.lesson.pk,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_lesson_create_anon(self):
+        """Тест создания урока неавторизованным пользователем."""
+
+        url = reverse("lms:lesson_create")
+        data = {
+            "name": "new lesson",
+            "description": "test",
+            "course": self.course.pk,
+            "video_link": "youtube.com",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_lesson_update(self):
+        """Тест обновления урока неавторизованным пользователем."""
+
+        url = reverse("lms:lesson_update", args=(self.lesson.pk,))
+        new_data = {
+            "name": "new name",
+            "description": "new description",
+        }
+        response = self.client.patch(url, new_data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_lesson_delete(self):
+        """Тест удаления урока неавторизованным пользователем."""
+
+        url = reverse("lms:lesson_delete", args=(self.lesson.pk,))
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_lesson_list(self):
+        """Тест получения списка уроков неавторизованным пользователем."""
+
+        url = reverse("lms:lessons_list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class LessonNotOwnerTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create(email="test@mail.com", password="test")
+        self.user2 = User.objects.create(email="test2@mail.com", password="test2")
+        self.course = Course.objects.create(
+            name="Test course", description="test", owner=self.user2
+        )
+        self.lesson = Lesson.objects.create(
+            name="Test lesson",
+            description="test",
+            course=self.course,
+            owner=self.user2,
+            video_link="youtube.com",
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_lesson_update_not_owner(self):
+        """Тест изменения урока не владельцем."""
+
+        url = reverse("lms:lesson_update", args=(self.lesson.pk,))
+        new_data = {
+            "name": "new name",
+            "description": "new description",
+        }
+        response = self.client.patch(url, new_data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_lesson_delete(self):
+        """Тест удаления урока не владельцем.."""
+
+        url = reverse("lms:lesson_delete", args=(self.lesson.pk,))
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Lesson.objects.all().count(), 1)

@@ -3,9 +3,10 @@ from rest_framework.generics import (CreateAPIView, DestroyAPIView,
 from rest_framework.permissions import AllowAny
 
 from users.models import User
+from users.permissions import IsUser
 from users.serializer import (UserRetrieveSerializer, UserSerializer,
                               UserUpdateSerializer)
-from users.permissions import IsUser
+
 
 class UserCreateAPIView(CreateAPIView):
     """Класс представления для создания пользователя."""
