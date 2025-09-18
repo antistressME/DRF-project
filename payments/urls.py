@@ -1,13 +1,10 @@
-from rest_framework.routers import SimpleRouter
+from django.urls import path
 
 from payments.apps import PaymentsConfig
-from payments.views import PaymentViewSet
+from payments.views import PaymentCreateAPIView
 
 app_name = PaymentsConfig.name
 
-router = SimpleRouter()
-router.register("", PaymentViewSet)
-
-
-urlpatterns = []
-urlpatterns += router.urls
+urlpatterns = [
+    path("", PaymentCreateAPIView.as_view(), name="payment"),
+]
