@@ -7,6 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 from lms.models import Course, Lesson
 from lms.paginators import CoursePaginator, LessonPaginator
 from lms.serializer import CourseSerializer, LessonSerializer
+from lms.tasks import t
 from users.permissions import IsModer, IsOwner
 
 
