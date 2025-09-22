@@ -176,3 +176,11 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {
+    "check_last_login_data": {
+        "task": "lms.tasks.check_last_login_data",  # Путь к задаче
+        "schedule": timedelta(days=1),  # Расписание выполнения задачи (каждый день)
+    },
+}
