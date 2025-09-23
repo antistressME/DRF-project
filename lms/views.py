@@ -7,6 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 from lms.models import Course, Lesson
 from lms.paginators import CoursePaginator, LessonPaginator
 from lms.serializer import CourseSerializer, LessonSerializer
+from lms.tasks import send_email
 from users.permissions import IsModer, IsOwner
 
 
@@ -30,6 +31,10 @@ class CourseViewSet(ModelViewSet):
         elif self.action == "destroy":
             self.permission_classes = (IsAdminUser | IsOwner,)
         return [permission() for permission in self.permission_classes]
+
+    def perform_update(self, serializer):
+        course = serializer.save()
+        send_email.delay(course)
 
 
 class LessonCreateAPIView(CreateAPIView):
