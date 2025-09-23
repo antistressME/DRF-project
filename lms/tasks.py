@@ -26,3 +26,4 @@ def check_last_login_data():
     for user in users:
         if datetime.now() - user.last_login <= timedelta(days=30):
             user.is_active = False
+            user.save()
